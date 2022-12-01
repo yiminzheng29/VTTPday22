@@ -30,6 +30,8 @@ public class RsvpRESTController {
 
     @Autowired
     private RsvpService rsvpSvc;
+
+    // http://localhost:8080/api/rsvp
     
     @GetMapping()
     public ResponseEntity<String> getAllCustomer(@RequestParam(required = false) String q) {
@@ -42,6 +44,12 @@ public class RsvpRESTController {
             arrBuilder.add(c.toJson());
         JsonArray result = arrBuilder.build();
         System.out.println("" + result.toString());
+        if (rsvps.isEmpty()) {
+            return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{'error_code': " + HttpStatus.NOT_FOUND + "'}");
+        }
         return ResponseEntity  
             .status(HttpStatus.OK)
             .contentType(MediaType.APPLICATION_JSON)
@@ -71,7 +79,7 @@ public class RsvpRESTController {
             resp = Json.createObjectBuilder().add("error", ex.getMessage()).build();
             return ResponseEntity.badRequest().body(resp.toString());
         }
-        rsvpResult = rsvpSvc.insertPurchaseOrder(rsvp);
+        rsvpResult = rsvpSvc.insertRsvp(rsvp);
         resp = Json.createObjectBuilder().add("rsvpId", rsvpResult.getId()).build();
 
         return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(resp.toString());

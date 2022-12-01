@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 
 import org.joda.time.DateTime;
 import org.joda.time.Instant;
+import org.joda.time.format.DateTimeFormat;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import jakarta.json.Json;
@@ -73,6 +74,7 @@ public class Rsvp {
 
     public static Rsvp create(JsonObject readObject) {
         final Rsvp r = new Rsvp();
+        r.setId(readObject.getInt("id"));
         r.setName(readObject.getString("name"));
         r.setEmail(readObject.getString("email"));
         r.setPhone(readObject.getString("phone"));
@@ -83,10 +85,11 @@ public class Rsvp {
 
     public static Rsvp create(SqlRowSet sqlObject) {
         final Rsvp r = new Rsvp();
+        r.setId(sqlObject.getInt("id"));
         r.setName(sqlObject.getString("name"));
         r.setEmail(sqlObject.getString("email"));
         r.setPhone(sqlObject.getString("phone"));
-        r.setConfirmationDate(new DateTime(Instant.parse(sqlObject.getString("confirmation_date"))));
+        r.setConfirmationDate(new DateTime(DateTimeFormat.forPattern("dd/MM/yyyy").parseDateTime(sqlObject.getString("confirmation_date"))));
         r.setComments(sqlObject.getString("comments"));
         return r;
     }

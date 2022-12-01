@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -39,11 +40,11 @@ public class RsvpRepository {
         return rsvp;
     }
 
-    public Rsvp searchRSVPByName(String name) {
+    public Rsvp searchRSVPByEmail(String email) {
         // prevent inheritance
         final List<Rsvp> rsvps = new LinkedList<>();
         // perform the query
-        final SqlRowSet rs = jdbcTemplate.queryForRowSet(SQL_SEARCH_RSVP_BY_NAME, name);
+        final SqlRowSet rs = jdbcTemplate.queryForRowSet(SQL_SEARCH_RSVP_BY_EMAIL, email);
 
         while (rs.next()) {
             rsvps.add(Rsvp.create(rs));
@@ -53,19 +54,31 @@ public class RsvpRepository {
 
     public Rsvp insertRsvp(final Rsvp rsvp) {
         KeyHolder keyholder = new GeneratedKeyHolder();
-        jdbcTemplate.update(conn -> {
-            PreparedStatement ps = conn.prepareStatement(SQL_INSERT_RSVP, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, rsvp.getName());
-            ps.setString(2, rsvp.getEmail());
-            ps.setString(3, rsvp.getPhone());
-            System.out.println("Confirmation date > " + rsvp.getConfirmationDate());
-            ps.setTimestamp(4, new Timestamp(rsvp.getConfirmationDate().toDateTime().getMillis()));
-            ps.setString(5, rsvp.getComments());
-            return ps;
-        }, keyholder);
+        try {
+            jdbcTemplate.update(conn -> {
+                PreparedStatement ps = conn.prepareStatement(SQL_INSERT_RSVP, Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, rsvp.getName());
+                ps.setString(2, rsvp.getEmail());
+                ps.setString(3, rsvp.getPhone());
+                System.out.println("Confirmation date > " + rsvp.getConfirmationDate());
+                ps.setTimestamp(4, new Timestamp(rsvp.getConfirmationDate().toDateTime().getMillis()));
+                ps.setString(5, rsvp.getComments());
+                return ps;
+            }, keyholder);
 
-        BigInteger primaryKeyVal = (BigInteger) keyholder.getKey();
-        rsvp.setId(primaryKeyVal.intValue());
+            BigInteger primaryKeyVal = (BigInteger) keyholder.getKey();
+            rsvp.setId(primaryKeyVal.intValue());
+        
+        } catch (DataIntegrityViolationException e) {
+            Rsvp existingRSVP = searchRSVPByEmail(rsvp.getEmail());
+            existingRSVP.setComments(rsvp.getComments());
+            existingRSVP.setName(rsvp.getName());
+            existingRSVP.setPhone(rsvp.getPhone());
+            existingRSVP.setConfirmationDate(rsvp.getConfirmationDate());
+            if (updateRSVP(existingRSVP)) {
+                rsvp.setId(existingRSVP.getId());
+            }
+        }
         return rsvp;
     }
 

@@ -1,0 +1,24 @@
+insert date as 'YYYY-MM-DD' in sql
+
+USE rsvpdb;
+
+CREATE TABLE rsvp 
+(
+	id int auto_increment not null,
+	name varchar(64) not null,
+    email varchar(64) not null,
+    phone varchar(30),
+    confirmation_date datetime,
+    comments longtext,
+    primary key(id)
+);
+
+desc rsvp;
+
+INSERT into rsvp (name, email, phone, confirmation_date, comments) VALUES ('lalala', 'lalala@gmail.com', 12345, sysdate(), 'something');
+
+
+For application.properties:
+spring.datasource.url=jdbc:mysql://localhost:3306/rsvpdb
+spring.datasource.username=rsvp
+spring.datasource.password=Password@123456
